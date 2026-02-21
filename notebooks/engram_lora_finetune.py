@@ -116,7 +116,7 @@ model = AutoModelForImageTextToText.from_pretrained(MODEL_ID, quantization_confi
 processor = AutoProcessor.from_pretrained(MODEL_ID)
 processor.tokenizer.padding_side = "right"
 
-lora_config = LoraConfig(r=16, lora_alpha=32, lora_dropout=0.05, bias="none", target_modules="all-linear", task_type="CAUSAL_LM")
+lora_config = LoraConfig(r=32, lora_alpha=64, lora_dropout=0.05, bias="none", target_modules="all-linear", task_type="CAUSAL_LM")
 
 # ─── 4. Dataset & Training ────────────────────────────────────────
 
@@ -134,6 +134,8 @@ training_args = SFTConfig(
     max_seq_length=2048,
     learning_rate=2e-4,
     lr_scheduler_type="cosine",
+    warmup_ratio=0.1,
+    weight_decay=0.01,
     bf16=COMPUTE_DTYPE == torch.bfloat16,
     fp16=COMPUTE_DTYPE == torch.float16,
     optim="adamw_torch_fused" if COMPUTE_DTYPE == torch.bfloat16 else "paged_adamw_8bit",
