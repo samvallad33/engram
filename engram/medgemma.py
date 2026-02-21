@@ -137,28 +137,70 @@ class MedGemmaEngine:
     """
     MedGemma 1.5 4B inference engine for ENGRAM.
     Handles image analysis, localization, question generation, and feedback.
+    Supports optional LoRA adapter via ENGRAM_LORA_PATH env var.
     """
 
-    def __init__(self, model_id: str = "google/medgemma-1.5-4b-it", device: str = "auto"):
+    def __init__(
+        self,
+        model_id: str = "google/medgemma-1.5-4b-it",
+        device: str = "auto",
+        lora_path: str | None = None,
+    ):
         self.model_id = model_id
         self.device = device
+        self.lora_path = lora_path
         self.pipe = None
         self._loaded = False
 
     def load(self):
-        """Load the model (call once at startup)."""
+        """Load the model (call once at startup). Applies LoRA adapter if path set."""
         if self._loaded:
             return
 
+        import os
         import torch
         from transformers import pipeline
 
-        self.pipe = pipeline(
-            "image-text-to-text",
-            model=self.model_id,
-            torch_dtype=torch.float16,
-            device_map=self.device,
-        )
+        # Resolve LoRA path from constructor arg or env var
+        adapter_path = self.lora_path or os.environ.get("ENGRAM_LORA_PATH")
+
+        if adapter_path and os.path.isdir(adapter_path):
+            # Validate adapter directory
+            config_file = os.path.join(adapter_path, "adapter_config.json")
+            if not os.path.isfile(config_file):
+                raise FileNotFoundError(
+                    f"ENGRAM_LORA_PATH={adapter_path} is not a valid PEFT adapter "
+                    f"(missing adapter_config.json)"
+                )
+
+            # Load base model + LoRA adapter directly
+            from transformers import AutoModelForImageTextToText, AutoProcessor
+            from peft import PeftModel
+
+            compute_dtype = torch.bfloat16 if torch.cuda.is_available() and torch.cuda.is_bf16_supported() else torch.float16
+            base_model = AutoModelForImageTextToText.from_pretrained(
+                self.model_id,
+                torch_dtype=compute_dtype,
+                device_map=self.device,
+            )
+            model = PeftModel.from_pretrained(base_model, adapter_path)
+            model.eval()
+            processor = AutoProcessor.from_pretrained(self.model_id)
+            # NOTE: Do NOT pass device_map to pipeline — model is already dispatched
+            self.pipe = pipeline(
+                "image-text-to-text",
+                model=model,
+                processor=processor,
+                torch_dtype=compute_dtype,
+            )
+        else:
+            compute_dtype = torch.bfloat16 if torch.cuda.is_available() and torch.cuda.is_bf16_supported() else torch.float16
+            self.pipe = pipeline(
+                "image-text-to-text",
+                model=self.model_id,
+                torch_dtype=compute_dtype,
+                device_map=self.device,
+            )
         self._loaded = True
 
     def _infer(self, image: Image.Image, prompt: str, max_tokens: int = 2000) -> str:

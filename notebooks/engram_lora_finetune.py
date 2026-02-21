@@ -9,7 +9,7 @@ Innovation: Training examples are weighted by FSRS-6 Difficulty — cases
 that students struggle with (high D, many lapses) get higher training
 emphasis. The model learns to teach exactly what's hard.
 
-Runs on: Kaggle T4 (16GB) or RunPod RTX 4090 (24GB).
+Runs on: Kaggle T4 (16GB) or RunPod RTX 5090 (32GB).
 """
 
 # %% [markdown]
@@ -350,7 +350,7 @@ print(f"  Ratio: {cat_dist.get('Atelectasis', 0) / max(1, cat_dist.get('No Findi
 # ## 3. Load MedGemma with QLoRA
 #
 # QLoRA (4-bit NF4 quantization) reduces VRAM from ~8GB to ~4GB,
-# leaving room for gradients and optimizer states on T4/4090.
+# leaving room for gradients and optimizer states on T4/5090.
 
 # %%
 from transformers import (
@@ -364,20 +364,24 @@ from datasets import Dataset
 
 MODEL_ID = "google/medgemma-1.5-4b-it"
 
+# Detect GPU dtype capability (RTX 5090 = bf16, T4 = fp16)
+COMPUTE_DTYPE = torch.bfloat16 if torch.cuda.is_available() and torch.cuda.is_bf16_supported() else torch.float16
+print(f"Compute dtype: {COMPUTE_DTYPE} ({'bf16-capable GPU' if COMPUTE_DTYPE == torch.bfloat16 else 'fp16 fallback'})")
+
 # 4-bit quantization config (QLoRA)
 bnb_config = BitsAndBytesConfig(
     load_in_4bit=True,
     bnb_4bit_use_double_quant=True,
     bnb_4bit_quant_type="nf4",
-    bnb_4bit_compute_dtype=torch.bfloat16,
-    bnb_4bit_quant_storage=torch.bfloat16,
+    bnb_4bit_compute_dtype=COMPUTE_DTYPE,
+    bnb_4bit_quant_storage=COMPUTE_DTYPE,
 )
 
 print(f"Loading {MODEL_ID} with QLoRA (4-bit NF4)...")
 model = AutoModelForImageTextToText.from_pretrained(
     MODEL_ID,
     quantization_config=bnb_config,
-    torch_dtype=torch.bfloat16,
+    torch_dtype=COMPUTE_DTYPE,
     device_map="auto",
 )
 
@@ -390,15 +394,14 @@ if torch.cuda.is_available():
 # LoRA config: rank-16, all linear layers
 lora_config = LoraConfig(
     r=16,
-    lora_alpha=16,
+    lora_alpha=32,
     lora_dropout=0.05,
     bias="none",
     target_modules="all-linear",
     task_type="CAUSAL_LM",
-    modules_to_save=["lm_head", "embed_tokens"],
 )
 
-print(f"LoRA config: rank={lora_config.r}, alpha={lora_config.lora_alpha}")
+print(f"LoRA config: rank={lora_config.r}, alpha={lora_config.lora_alpha}, scaling={lora_config.lora_alpha / lora_config.r:.1f}x")
 
 # %% [markdown]
 # ## 4. Prepare Dataset for SFTTrainer
@@ -409,7 +412,8 @@ hf_dataset = Dataset.from_list([
     {"messages": ex["messages"]} for ex in training_data
 ])
 
-# Train/eval split
+# Train/eval split (shuffle=True ensures representative eval across all difficulty levels)
+# FSRS difficulty weighting is in the data DISTRIBUTION (more hard examples), not ordering
 splits = hf_dataset.train_test_split(test_size=0.1, seed=42)
 train_dataset = splits["train"]
 eval_dataset = splits["test"]
@@ -437,7 +441,8 @@ training_args = SFTConfig(
     per_device_eval_batch_size=2,
     gradient_accumulation_steps=8,     # Effective batch = 16
     gradient_checkpointing=True,
-    max_seq_length=1024,
+    gradient_checkpointing_kwargs={"use_reentrant": False},  # Required for QLoRA + PEFT
+    max_seq_length=2048,
     learning_rate=2e-4,
     lr_scheduler_type="cosine",
     warmup_ratio=0.03,
@@ -452,10 +457,6 @@ training_args = SFTConfig(
     save_strategy="epoch",
     save_total_limit=2,
     report_to="none",
-    dataset_kwargs={
-        "add_special_tokens": False,
-        "append_concat_token": True,
-    },
 )
 
 trainer = SFTTrainer(
@@ -468,8 +469,9 @@ trainer = SFTTrainer(
 )
 
 # Training stats
-total_steps = len(train_dataset) * training_args.num_train_epochs // (
-    training_args.per_device_train_batch_size * training_args.gradient_accumulation_steps
+total_steps = math.ceil(
+    len(train_dataset) * training_args.num_train_epochs
+    / (training_args.per_device_train_batch_size * training_args.gradient_accumulation_steps)
 )
 print(f"\n{'=' * 60}")
 print(f"FSRS-WEIGHTED LORA FINE-TUNING")
@@ -481,7 +483,7 @@ print(f"  Train examples: {len(train_dataset)}")
 print(f"  Epochs:         {training_args.num_train_epochs}")
 print(f"  Batch size:     {training_args.per_device_train_batch_size} x {training_args.gradient_accumulation_steps} = {training_args.per_device_train_batch_size * training_args.gradient_accumulation_steps}")
 print(f"  Total steps:    ~{total_steps}")
-print(f"  Precision:      {'bf16' if USE_BF16 else 'fp16'}")
+print(f"  Precision:      {COMPUTE_DTYPE}")
 print(f"{'=' * 60}")
 
 start_time = time.time()
@@ -704,7 +706,7 @@ for cat in ["No Finding", "Cardiomegaly", "Pneumonia", "Atelectasis"]:
 #
 # ### FSRS-Weighted LoRA Fine-Tuning Results
 # - **Base model:** MedGemma 1.5 4B (`google/medgemma-1.5-4b-it`)
-# - **LoRA:** rank-16, alpha 16, all-linear, QLoRA 4-bit NF4
+# - **LoRA:** rank-16, alpha 32 (2x scaling), all-linear, QLoRA 4-bit NF4
 # - **Trainable params:** ~4.2M (0.1% of 4B)
 # - **Training data:** 1,000 FSRS-weighted examples (11 categories, 5 skill levels)
 # - **Curriculum:** Easy → Hard ordering based on FSRS-6 Difficulty

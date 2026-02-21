@@ -92,8 +92,14 @@ def init_engine():
         if engine is not None:
             return engine
         if USE_REAL_MEDGEMMA:
-            engine = MedGemmaEngine()
-            engine.load()
+            lora_path = os.environ.get("ENGRAM_LORA_PATH")
+            engine = MedGemmaEngine(lora_path=lora_path)
+            try:
+                engine.load()
+            except Exception as e:
+                print(f"[ENGRAM] MedGemma load failed: {e}. Falling back to mock engine.")
+                engine = MockMedGemmaEngine()
+                engine.load()
         else:
             engine = MockMedGemmaEngine()
             engine.load()
