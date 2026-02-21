@@ -730,8 +730,11 @@ def submit_answer(student_answer: str, self_rating: str, confidence: int, state:
 
     # ─── F3: Search Completeness (Satisfaction of Search) ──────
     search_found, search_missed, search_comp = [], [], 0.0
-    if isinstance(engine, MockMedGemmaEngine):
-        search_found, search_missed, search_comp = engine.grade_search_completeness(student_answer, category)
+    if ai_feedback is not None:
+        search_found = ai_feedback.correct_findings[:5]
+        search_missed = ai_feedback.missed_findings[:5]
+        total = len(search_found) + len(search_missed)
+        search_comp = len(search_found) / total if total > 0 else 1.0
 
     # ─── Draw bounding boxes on image ("See What I See") ──────
     annotated_image = draw_boxes_on_image(image, boxes) if boxes else image
@@ -934,15 +937,17 @@ def get_socratic_question(student_answer: str, state: dict):
     card = state.get("card")
     if not student or not card or not engine:
         return "Start a session first."
-    if not isinstance(engine, MockMedGemmaEngine):
-        return "Socratic mode uses the mock engine's clinical knowledge."
-    return engine.generate_socratic_question(None, student_answer, card.category)
+    try:
+        image = Image.open(card.image_path).convert("RGB")
+    except Exception:
+        image = None
+    return engine.generate_socratic_question(image, student_answer, card.category)
 
 
 def submit_socratic_response(socratic_answer: str, state: dict):
     """Process student's response to Socratic question."""
     card = state.get("card")
-    if not card or not engine or not isinstance(engine, MockMedGemmaEngine):
+    if not card or not engine:
         return "No active Socratic dialogue."
     return engine.generate_socratic_followup("", socratic_answer, card.category)
 
@@ -954,10 +959,7 @@ def submit_gestalt(gestalt_answer: str, state: dict):
     card = state.get("card")
     if not card or not engine:
         return "No active case.", None
-    if isinstance(engine, MockMedGemmaEngine):
-        score = engine.grade_gestalt(gestalt_answer, card.category)
-    else:
-        score = 0.5
+    score = engine.grade_gestalt(gestalt_answer, card.category)
     label = "Strong" if score >= 0.7 else ("Partial" if score >= 0.4 else "Missed")
     # Re-show the image for full analysis
     try:
@@ -980,8 +982,8 @@ def start_contrastive(state: dict):
     if not student or not student.cards:
         return None, None, "Start a session first.", "", state
 
-    if not isinstance(engine, MockMedGemmaEngine):
-        return None, None, "Contrastive mode uses mock engine knowledge.", "", state
+    if not engine:
+        return None, None, "No engine loaded.", "", state
 
     # Pick a random contrastive pair
     pair_keys = list(engine.CONTRASTIVE_PAIRS.keys())
@@ -1017,7 +1019,7 @@ def submit_contrastive(student_answer: str, self_rating: str, state: dict):
     student = state.get("student")
     contrastive_pair = state.get("contrastive_pair")
 
-    if not student or not isinstance(engine, MockMedGemmaEngine):
+    if not student or not engine:
         return "No active contrastive case.", state
 
     if contrastive_pair is None:
@@ -1599,11 +1601,13 @@ if __name__ == "__main__":
     app = build_app()
     import os as _os
     _on_kaggle = _os.environ.get("KAGGLE_KERNEL_RUN_TYPE") is not None
+    _on_runpod = _os.environ.get("RUNPOD_POD_ID") is not None
+    _remote = _on_kaggle or _on_runpod
     app.launch(
-        server_name="0.0.0.0" if _on_kaggle else "127.0.0.1",
+        server_name="0.0.0.0" if _remote else "127.0.0.1",
         server_port=int(_os.environ.get("PORT", 7860)),
-        share=_on_kaggle,
-        show_error=_on_kaggle,
+        share=_remote,
+        show_error=_remote,
         theme=gr.themes.Base(
             primary_hue="blue",
             neutral_hue="slate",

@@ -278,3 +278,168 @@ class MedGemmaEngine:
             explanation=data.get("explanation", ""),
             box_iou=0.0,
         )
+
+    # ─── F2: Socratic Mode ────────────────────────────────────────
+
+    def generate_socratic_question(
+        self, image: Image.Image | None, student_answer: str, category: str,
+    ) -> str:
+        """Generate a Socratic probing question using MedGemma inference."""
+        if image is not None:
+            prompt = (
+                "You are a radiology professor using the Socratic method. "
+                f"A student described this chest X-ray (category: {category}).\n\n"
+                f"Student's answer: {student_answer}\n\n"
+                "Ask ONE probing question that guides them toward any findings "
+                "they may have missed. Do not reveal the answer directly.\n\n"
+                "Format your response as:\n"
+                "**Socratic Question:**\n\n[your question]\n\n"
+                "*Think about this before seeing the full answer.*"
+            )
+            return _strip_thinking_tokens(self._infer(image, prompt, max_tokens=300))
+        return (
+            f"**Socratic Question:**\n\nWhat other findings associated with "
+            f"{category} should you consider in this region?\n\n"
+            f"*Think about this before seeing the full answer.*"
+        )
+
+    def generate_socratic_followup(
+        self, student_answer: str, socratic_response: str, category: str,
+    ) -> str:
+        """Evaluate student's Socratic response."""
+        response_text = (socratic_response or "").strip()
+        if len(response_text) > 30:
+            return (
+                "**Good thinking!** You're engaging with the question critically. "
+                "Let's see the full expert analysis."
+            )
+        return (
+            "**Consider more carefully.** Take a moment to think about the key "
+            f"features of {category}. Let me show you the complete picture."
+        )
+
+    # ─── F3: Satisfaction of Search ────────────────────────────────
+
+    def grade_search_completeness(
+        self, student_answer: str, category: str,
+    ) -> tuple[list[str], list[str], float]:
+        """Grade search completeness. For real engine, this is derived from
+        grade_response() results in app.py. Kept for interface compatibility."""
+        return [], [], 0.0
+
+    # ─── F4: Dual-Process Gestalt Grading ──────────────────────────
+
+    GESTALT_KEYWORDS = {
+        "Cardiomegaly": ["heart", "enlarged", "big", "cardio", "large"],
+        "Pneumothorax": ["pneumo", "air", "collapsed", "lung"],
+        "Pleural Effusion": ["fluid", "effusion", "white", "base"],
+        "Lung Opacity": ["opacity", "white", "hazy", "shadow"],
+        "Consolidation": ["consolidation", "solid", "dense", "white"],
+        "Atelectasis": ["collapse", "atelectasis", "volume"],
+        "Edema": ["edema", "fluid", "hazy", "bilateral"],
+        "Fracture": ["fracture", "broken", "rib", "break"],
+        "No Finding": ["normal", "clear", "nothing", "unremarkable"],
+        "Pneumonia": ["pneumonia", "infection", "consolidation"],
+        "Support Devices": ["tube", "line", "device", "wire"],
+    }
+
+    def grade_gestalt(self, student_answer: str, category: str) -> float:
+        """Grade a rapid gestalt impression (System 1). Fast keyword matching
+        to avoid inference delay — gestalt is about instant recognition."""
+        answer_lower = (student_answer or "").lower()
+        if not answer_lower.strip():
+            return 0.0
+        keywords = self.GESTALT_KEYWORDS.get(category, [category.lower()])
+        matches = sum(1 for kw in keywords if kw in answer_lower)
+        if matches >= 2:
+            return 0.85
+        elif matches >= 1:
+            return 0.6
+        return 0.15
+
+    # ─── F5: Contrastive Case Pairs ────────────────────────────────
+
+    CONTRASTIVE_PAIRS = {
+        ("Consolidation", "Atelectasis"): {
+            "question": "Both images show opacification. One is consolidation, the other atelectasis. What is the KEY distinguishing feature?",
+            "key_difference": "Volume loss. Atelectasis has volume loss (elevated diaphragm, mediastinal shift toward opacity, fissure displacement). Consolidation does not.",
+            "keywords": ["volume loss", "shift", "collapse", "fissure", "diaphragm"],
+        },
+        ("Pleural Effusion", "Lung Opacity"): {
+            "question": "Both show whiteness at the base. One is effusion, the other parenchymal opacity. How do you tell them apart?",
+            "key_difference": "Meniscus sign. Effusions are gravity-dependent with a curved upper border (meniscus). Parenchymal opacities don't layer with position change.",
+            "keywords": ["meniscus", "gravity", "layer", "decubitus", "costophrenic"],
+        },
+        ("Cardiomegaly", "Edema"): {
+            "question": "Both cases involve the heart and lungs. One shows cardiomegaly alone, the other pulmonary edema. What features distinguish them?",
+            "key_difference": "Cardiomegaly is heart-size only (CTR > 0.5). Edema shows lung findings: cephalization, Kerley B lines, bilateral haziness, peribronchial cuffing.",
+            "keywords": ["cephalization", "kerley", "lung", "ctr", "haziness"],
+        },
+        ("Pneumothorax", "No Finding"): {
+            "question": "One of these films has a subtle pneumothorax. The other is normal. Can you identify which is which and why?",
+            "key_difference": "Look for the visceral pleural line — a thin white line parallel to the chest wall with absent lung markings beyond it. Normal films have vascular markings extending to the periphery.",
+            "keywords": ["pleural line", "lung markings", "peripheral", "visceral"],
+        },
+        ("Pneumonia", "Consolidation"): {
+            "question": "Both show dense opacification. One is typical bacterial pneumonia, the other a non-infectious consolidation. What clinical and imaging clues help?",
+            "key_difference": "Imaging alone often cannot distinguish them. Clinical context is key: fever + acute onset suggests infection. Air bronchograms appear in both. Follow-up imaging showing resolution with antibiotics confirms pneumonia.",
+            "keywords": ["clinical", "fever", "follow-up", "resolution", "antibiotics"],
+        },
+        ("Edema", "Pneumonia"): {
+            "question": "Both show bilateral opacities. One is pulmonary edema, the other bilateral pneumonia. What patterns help distinguish them?",
+            "key_difference": "Edema is typically symmetric, perihilar (bat-wing), with cephalization and often cardiomegaly. Pneumonia tends to be asymmetric, lobar, with air bronchograms and no cephalization.",
+            "keywords": ["symmetric", "perihilar", "asymmetric", "cardiomegaly", "cephalization"],
+        },
+    }
+
+    def generate_contrastive_question(self, category_a: str, category_b: str) -> str:
+        """Generate a contrastive comparison question."""
+        pair = self.CONTRASTIVE_PAIRS.get(
+            (category_a, category_b),
+            self.CONTRASTIVE_PAIRS.get((category_b, category_a)),
+        )
+        if pair:
+            return pair["question"]
+        return (
+            f"Compare these two cases. One is {category_a}, the other is "
+            f"{category_b}. What is the key distinguishing feature?"
+        )
+
+    def grade_contrastive(
+        self, student_answer: str, category_a: str, category_b: str,
+    ) -> FeedbackResult:
+        """Grade contrastive pair discrimination."""
+        pair = self.CONTRASTIVE_PAIRS.get(
+            (category_a, category_b),
+            self.CONTRASTIVE_PAIRS.get((category_b, category_a)),
+        )
+        answer_lower = (student_answer or "").lower()
+
+        if pair:
+            keywords = pair["keywords"]
+            matches = sum(1 for kw in keywords if kw in answer_lower)
+            if matches >= 2:
+                score = 0.85
+            elif matches >= 1:
+                score = 0.6
+            else:
+                score = 0.2
+            explanation = f"**Key Difference:** {pair['key_difference']}"
+            correct = [kw for kw in keywords if kw in answer_lower]
+            missed = [kw for kw in keywords if kw not in answer_lower]
+        else:
+            score = 0.5
+            explanation = (
+                f"Compare the characteristic features of {category_a} "
+                f"versus {category_b}."
+            )
+            correct, missed = [], []
+
+        return FeedbackResult(
+            score=min(1.0, score),
+            correct_findings=correct,
+            missed_findings=missed[:3],
+            false_positives=[],
+            explanation=explanation,
+            box_iou=0.0,
+        )
