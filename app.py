@@ -32,8 +32,7 @@ from engram.fsrs6 import (
     search_completeness_modifier,
 )
 from engram.medgemma import MedGemmaEngine, BoundingBox
-from engram.mock_engine import MockMedGemmaEngine
-from engram.medasr import MedASREngine, MockMedASREngine
+from engram.medasr import MedASREngine
 from engram.retrieval import MedSigLIPRetriever
 from engram.cxr_foundation import CXRFoundationRetriever
 from engram.longitudinal import (
@@ -42,12 +41,17 @@ from engram.longitudinal import (
 )
 from engram.student import StudentState
 from engram.blindspot import render_blindspot_html, render_session_stats_html, render_calibration_chart_html
-from engram.hear import MockHeAREngine, HeAREngine, LUNG_SOUNDS
+from engram.hear import HeAREngine, LUNG_SOUNDS
 from engram.dataset import CATEGORY_DESCRIPTIONS, load_demo_dataset
+
+# Mock fallback — only loaded when ENGRAM_USE_MEDGEMMA=false (dev/testing)
+from engram.mock_engine import MockMedGemmaEngine
+from engram.medasr import MockMedASREngine
+from engram.hear import MockHeAREngine
 
 
 # ─── Configuration ─────────────────────────────────────────────────
-USE_REAL_MEDGEMMA = os.environ.get("ENGRAM_USE_MEDGEMMA", "false").lower() == "true"
+USE_REAL_MEDGEMMA = os.environ.get("ENGRAM_USE_MEDGEMMA", "true").lower() != "false"
 DATA_DIR = Path(__file__).parent / "data"
 STUDENT_DIR = Path(__file__).parent / "students"
 
@@ -546,10 +550,9 @@ def build_consensus_html(
     esc_cat = _html.escape(category)
     esc_sound = _html.escape(sound_type)
 
-    mode_label = "" if USE_REAL_MEDGEMMA else " <span style='color:#64748b;font-weight:normal;'>(simulated)</span>"
     html = f"""<div style="padding:10px;background:#0f172a;border-radius:10px;border:1px solid #1e293b;">
   <h4 style="color:#e2e8f0;margin:0 0 10px;font-size:13px;letter-spacing:1px;">
-    5-MODEL CONSENSUS &mdash; {esc_cat}{mode_label}</h4>
+    5-MODEL CONSENSUS &mdash; {esc_cat}</h4>
   <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;font-size:12px;">
     <div style="background:#1e293b;padding:8px;border-radius:6px;border-left:3px solid {mg_color};">
       <span style="color:#94a3b8;">MedGemma 1.5</span><br>
@@ -1587,12 +1590,11 @@ def build_app() -> gr.Blocks:
 
 
 if __name__ == "__main__":
-    mode = "MedGemma 1.5 4B (GPU)" if USE_REAL_MEDGEMMA else "Mock Engine (CPU)"
+    mode = "5 HAI-DEF Models (GPU)" if USE_REAL_MEDGEMMA else "Mock Engine (CPU, set ENGRAM_USE_MEDGEMMA=false)"
     print(f"\n  ENGRAM v0.4.0")
     print(f"  Mode: {mode}")
-    print(f"  HAI-DEF Models: MedGemma 1.5 + MedSigLIP + CXR Foundation + MedASR + HeAR")
-    print(f"  Data: {DATA_DIR}")
-    print(f"  Set ENGRAM_USE_MEDGEMMA=true for real inference\n")
+    print(f"  Models: MedGemma 1.5 4B + MedSigLIP + CXR Foundation + MedASR + HeAR")
+    print(f"  Data: {DATA_DIR}\n")
 
     app = build_app()
     import os as _os

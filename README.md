@@ -46,11 +46,11 @@ MedGemma 1.5  +  MedASR  +  CXR Foundation  +  MedSigLIP  +  HeAR
 # Install
 pip install -r requirements.txt
 
-# Run (mock mode, CPU)
+# Run (requires GPU with 5 HAI-DEF models)
 python app.py
 
-# Run (GPU mode with real models)
-ENGRAM_USE_MEDGEMMA=true python app.py
+# Run in dev/test mode (CPU, no models required)
+ENGRAM_USE_MEDGEMMA=false python app.py
 ```
 
 ## Project Structure
