@@ -1,146 +1,71 @@
-# ENGRAM — 3-Minute Demo Video Script
+AUDIO: A year ago, my memory was failing me. So, I engineered a solution.
 
-**Kaggle MedGemma Impact Challenge 2026**
-**Sam Vallad | February 2026**
+I wrote sixty-two thousand lines of code to build a twenty-one-parameter algorithm that mathematically maps exactly how the human brain forgets. I called it Vestige.
 
----
+Last month, I proved that algorithm could make Artificial Intelligence smarter—boosting LLM reasoning by nearly 4 percent.
 
-## [0:00 — THE PERSONAL HOOK] *(20 seconds)*
+But then, I saw a number that made me stop everything.
 
-*[Screen: Black. Typing cursor blinks. Code scrolls slowly in background.]*
+[0:20 — THE STAKES] (25 seconds)
+[Screen: Deep black. Stark white text slams onto the screen, perfectly timed with the voiceover.]
 
-A year ago I couldn't remember anything that mattered. So I built a memory system — sixty-two thousand lines of Rust, a twenty-one-parameter algorithm that models exactly how humans forget. I called it Vestige.
+AUDIO: Ten. Million.
 
-Last month, that same algorithm improved LLM training by 3.8 percent on MATH-500.
+That is the global shortage of healthcare workers we will face by 2030.
 
-Then I read a statistic that changed what I was building.
+Because of that burnout, diagnostic errors now contribute to ten percent of all patient deaths. A radiology student needs thousands of practice cases to become competent. Instead, they get a handful—graded inconsistently, and forgotten within weeks.
 
----
+We can't build medical schools fast enough. So we have to hack how the human brain learns.
 
-## [0:20 — THE PROBLEM] *(25 seconds)*
+[Screen: The text shatters. The sleek, dark-mode ENGRAM UI boots up instantly.]
 
-*[Screen: Black. White text fades in, one line at a time.]*
+[0:45 — THE MECH SUIT] (90 seconds)
+[Screen: ENGRAM running live. The user clicks "Start Session." A Chest X-Ray appears.]
 
-> Ten million healthcare workers short by 2030.
->
-> Diagnostic errors in 10% of patient deaths.
->
-> A radiology student needs thousands of practice cases to become competent.
->
-> They get a handful — shown randomly, graded inconsistently, forgotten within weeks.
+AUDIO: This is ENGRAM. Five state-of-the-art Google foundation models, wired directly into one human memory algorithm. Running entirely offline. On a single GPU.
 
-*[Beat. Text clears.]*
+ENGRAM doesn't just show you random X-Rays. The FSRS-6 algorithm tracks your exact cognitive decay. It knows this student hasn't seen Atelectasis in six days. It knows their retention just hit 68 percent. It intercepts the exact moment of forgetting.
 
-What if the algorithm that models human forgetting could fix how medical students learn to see?
+[Screen: User clicks the microphone. Dictates via MedASR. Text appears instantly.]
 
-*[ENGRAM logo appears.]*
+AUDIO: Real doctors don't type. They dictate. Google's MedASR catches the audio with 58 percent fewer errors than Whisper.
 
----
+[Screen: User hits "Submit." MedGemma instantly draws high-fidelity bounding boxes on the X-Ray, accompanied by JSON teaching data.]
 
-## [0:45 — THE LIVE DEMO] *(90 seconds)*
+AUDIO: MedGemma 1.5 analyzes the image, grades the response, and draws the exact bounding boxes of what you missed.
 
-*[Screen: ENGRAM running live on RunPod RTX 5090. Gradio interface.]*
+But diagnostic errors aren't just a lack of knowledge. They are cognitive biases. So we built six clinical training modes to break them.
 
-This is ENGRAM. Five Google foundation models. One memory algorithm. Running live.
+[Screen: Rapid, rhythmic cuts. 5 seconds per mode. High energy.]
 
-*[Click "Start Session." CXR appears with clinical question.]*
+AUDIO: Satisfaction of Search: Did you find the second tumor, or did you stop after the first? ENGRAM tracks your search completeness.
+Confidence Calibration: You were 100 percent confident, but completely wrong. Overconfidence kills. ENGRAM penalizes your interval.
+Contrastive Pairs: Consolidation and Atelectasis look identical. ENGRAM forces you to spot the microscopic differences side-by-side.
+Listen Then Look: [Audio: play 2 seconds of synthetic crackle breath sounds] HeAR plays bioacoustic lung sounds. Hear the patient, predict the X-ray, then see the truth.
 
-**FSRS-6 picks your next case** — not randomly, but at the exact moment your memory is about to fail. This student hasn't seen Atelectasis in six days. Retention has dropped to 68%. Now is the optimal moment to review.
+[Screen: Scroll down to the Diagnostic Landscape—a glowing heatmap of blind spots.]
 
-*[Type a student answer. Click Submit.]*
+AUDIO: Every click updates your personal Forgetting Landscape. No hiding. You see exactly where you are strong, and exactly where you are dangerously weak.
 
-**MedGemma 1.5 grades your response in real time** — what you got right, what you missed, and why. Then it draws bounding boxes directly on the image: *here* is the finding you overlooked.
+[2:15 — THE PARADIGM SHIFT] (25 seconds)
+[Screen: Architecture diagram showing the 'Biological-Digital Bridge'. FSRS signals flowing directly into QLoRA weights.]
 
-*[Scroll down to show FSRS-6 memory update table, search completeness, consensus panel.]*
+AUDIO: But here is the breakthrough.
 
-But grading isn't enough. Diagnostic errors aren't knowledge failures — they're cognitive failures. So ENGRAM has six training modes built on radiology education research.
+As students review cases, FSRS-6 mathematically scores how hard each concept is. We take those human difficulty signals, and we use them as fine-tuning weights for MedGemma. Every other curriculum system uses model-internal math. ENGRAM is the first system to use human memory parameters to rewrite a Vision-Language Model's neural weights.
 
-*[Quick cuts through each mode — 8 seconds each:]*
+The cases humans struggle with the most get the highest training priority. The AI literally evolves to teach you better.
 
-**Satisfaction of Search** — did you find ALL the findings, or did you stop after the first one? Twenty-two percent of radiology errors come from stopping too early.
+[2:40 — THE MIC DROP] (20 seconds)
+[Screen: The UI fades out. White text appears on black.]
+> 2,200 lines of Python.
+> 5 HAI-DEF Models.
+> 0 Cloud Dependencies. 100% Edge-Deployable.
 
-**Confidence Calibration** — your confidence was 4 out of 5, but your accuracy was 45%. FSRS-6 shortens your review interval. Overconfidence kills.
+AUDIO: Five models. Twenty-one parameters. Zero cloud dependencies. No patient data ever leaves the device.
 
-**Contrastive Pairs** — consolidation and atelectasis look identical. Both show white. One has volume loss. Can you tell which?
+[Screen: Sam speaking directly to camera, dead serious.]
 
-**Socratic Mode** — no answers. Just a question that makes you think harder.
+AUDIO: I originally built this math to fix my own memory.
 
-**Dual-Process** — three-second flash. What did you see? That's your System 1. Now take your time. That's System 2. ENGRAM trains both.
-
-**Listen Then Look** — HeAR plays lung sounds from 313 million audio clips. You hear crackles. You predict consolidation. Then you see the X-ray. This is how real clinical reasoning works.
-
-*[Show the Diagnostic Landscape — blind spot heatmap, forgetting curves, learning velocity.]*
-
-Every review updates your personal forgetting curve across eleven pathology categories. ENGRAM knows exactly where you're strong and exactly where you're dangerously weak.
-
----
-
-## [2:15 — THE FLYWHEEL] *(25 seconds)*
-
-*[Screen: Architecture diagram — the co-evolutionary data flywheel.]*
-
-Now the part nobody else has.
-
-Students review cases. FSRS-6 measures which cases are hardest. Those difficulty signals become **fine-tuning weights for MedGemma itself** — a LoRA adapter trained on human memory data.
-
-The cases students struggle with most get the highest training emphasis. The model gets better at explaining exactly what's hard. Students learn faster. New difficulty data flows back. The flywheel spins.
-
-*[Show notebook: QLoRA, 1000 FSRS-weighted examples, curriculum ordering.]*
-
-Every existing curriculum learning system uses model-internal signals — loss, gradients. ENGRAM is the first to use **human memory parameters** as VLM fine-tuning weights.
-
----
-
-## [2:40 — THE CLOSE] *(20 seconds)*
-
-*[Screen fades to black. Pause.]*
-
-*[White text, one line at a time:]*
-
-> 9,300 lines of Python. 82 tests. Runs offline on a single GPU.
->
-> Five models. Twenty-one parameters. Six training modes.
->
-> No cloud. No data leaves the device. Works anywhere a medical student has a laptop.
-
-*[Final beat. Sam speaking directly to camera.]*
-
-I built Vestige to help myself remember. Then I showed it makes AI smarter. Now I'm showing it makes doctors better — before the shortage costs more lives.
-
-*[ENGRAM logo. Fade to black.]*
-
----
-
-**[END — 3:00]**
-
-*~460 spoken words. Target pace: 155 wpm = 2:58.*
-*Live demo is the centerpiece — 90 seconds of real ENGRAM on RunPod.*
-
----
-
-## Production Notes
-
-### Screen Recording Checklist
-- [ ] RunPod RTX 5090 with ENGRAM running (`ENGRAM_USE_MEDGEMMA=true`)
-- [ ] Demo CXR images loaded (11 categories, 33 images in `data/demo/`)
-- [ ] Record at 1080p, dark Gradio theme
-- [ ] Show terminal briefly at start: `ENGRAM v0.4.0 | Mode: 5 HAI-DEF Models (GPU)`
-- [ ] Have pre-typed student answers ready (paste, don't type live)
-- [ ] For Contrastive Pairs: use Consolidation vs Atelectasis (most dramatic)
-- [ ] For Auscultation: use Pneumonia category (crackles → consolidation correlation)
-- [ ] Show FSRS-6 memory state table with real S/D/R values
-- [ ] Show forgetting curves with actual power-law decay visualization
-
-### Key Numbers (all verifiable in codebase)
-- 62,000 lines Rust (Vestige)
-- 9,300 lines Python (ENGRAM)
-- 82 tests passing
-- 5 HAI-DEF models
-- 6 training modes
-- 21 FSRS-6 parameters
-- 11 CheXpert categories
-- 4.2M trainable LoRA params (0.1% of 4B)
-- 22% of radiology errors from satisfaction of search (Kim & Mansfield, 2014)
-- 10M healthcare worker shortage by 2030 (WHO)
-- 10% of patient deaths involve diagnostic error (Balogh et al., NAP 2015)
-- +3.8% MATH-500 (LUMIA, Feb 2026)
+Now, we're going to use it to make sure the next generation of doctors never forgets a shadow on an X-Ray again.
