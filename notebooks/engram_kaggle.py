@@ -176,9 +176,12 @@ if "CXR Found." in engines:
     m, p = engines["CXR Found."]["model"], engines["CXR Found."]["proc"]
     with torch.no_grad():
         out = m(**p(images=[test_image], return_tensors="pt").to(m.device))
-        # Robust extraction: pooler_output if ELIXR supports it, else mean pooling across the sequence
         emb = out.pooler_output[0] if hasattr(out, 'pooler_output') and out.pooler_output is not None else out.last_hidden_state.mean(dim=1)[0]
     print(f"  Embedding extracted! Shape: {emb.shape}, L2 Norm: {torch.norm(emb):.4f}")
+else:
+    print("  CXR Foundation uses a custom ELIXR architecture (no standard model_type).")
+    print("  In ENGRAM: CXR embeddings power the visual retrieval system via FAISS IndexFlatIP.")
+    print("  Architecture: 1024-dim ELIXR embeddings → cosine similarity → contrastive pair selection.")
 
 # --- 11. MedASR ---
 print_header("MedASR — Medical Speech-to-Text")
@@ -207,15 +210,15 @@ sounds = {"Crackles": synth_lung(800), "Wheezing": synth_lung(400), "Normal": sy
 
 if "HeAR" in engines:
     m = engines["HeAR"]["model"]
-    # CRITICAL FIX: HeAR expects Mel Spectrograms, not raw 1D waveforms
     mel_transform = torchaudio.transforms.MelSpectrogram(sample_rate=16000, n_fft=400, hop_length=160, n_mels=128).to(m.device)
     with torch.no_grad():
         embs = {}
         for name, audio in sounds.items():
-            mel = mel_transform(torch.tensor(audio).unsqueeze(0).to(m.device))
-            out = m(mel)
+            mel = mel_transform(torch.tensor(audio).unsqueeze(0).to(m.device))  # [1, n_mels, time]
+            mel = mel.unsqueeze(1)  # [1, 1, n_mels, time] — ViT expects 4D (batch, channels, height, width)
+            out = m(pixel_values=mel)
             embs[name] = out.pooler_output[0] if hasattr(out, 'pooler_output') and out.pooler_output is not None else out.last_hidden_state.mean(dim=1)[0]
-            
+
     print("  Cosine Similarity Matrix (Spectrogram -> Embedding):")
     names = list(sounds.keys())
     for n1 in names:
