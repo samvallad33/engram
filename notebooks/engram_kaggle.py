@@ -150,8 +150,10 @@ zs_labels = ["Normal clear lungs", "Cardiomegaly", "Pneumothorax", "Pleural Effu
 if "MedSigLIP" in engines:
     m, p = engines["MedSigLIP"]["model"], engines["MedSigLIP"]["proc"]
     with torch.no_grad():
-        img_f = m.get_image_features(**p(images=[test_image], return_tensors="pt").to(m.device))
-        txt_f = m.get_text_features(**p(text=zs_labels, return_tensors="pt", padding=True).to(m.device))
+        img_out = m.get_image_features(**p(images=[test_image], return_tensors="pt").to(m.device))
+        txt_out = m.get_text_features(**p(text=zs_labels, return_tensors="pt", padding=True).to(m.device))
+        img_f = img_out.pooler_output if hasattr(img_out, 'pooler_output') else img_out
+        txt_f = txt_out.pooler_output if hasattr(txt_out, 'pooler_output') else txt_out
         sims = (img_f / img_f.norm(dim=-1, keepdim=True) @ (txt_f / txt_f.norm(dim=-1, keepdim=True)).T).squeeze().tolist()
     for lab, sim in zip(zs_labels, sims): print(f"  {lab:20s}: {sim:.4f}")
 
