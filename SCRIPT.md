@@ -1,71 +1,76 @@
-AUDIO: A year ago, my memory was failing me. So, I engineered a solution.
+# ENGRAM DEMO VIDEO — DIRECTOR'S CUT (3:00)
 
-I wrote sixty-two thousand lines of code to build a twenty-one-parameter algorithm that mathematically maps exactly how the human brain forgets. I called it Vestige.
+## [0:00 — THE HOOK & THE STAKES] (20 seconds)
 
-Last month, I proved that algorithm could make Artificial Intelligence smarter—boosting LLM reasoning by nearly 4 percent.
+Visual: Screen is pitch black. A heartbeat pulses in the audio. Stark white text slams onto the screen: **10%.**
 
-But then, I saw a number that made me stop everything.
+AUDIO: Ten percent. That is the percentage of patient deaths currently linked to diagnostic errors.
 
-[0:20 — THE STAKES] (25 seconds)
-[Screen: Deep black. Stark white text slams onto the screen, perfectly timed with the voiceover.]
+Visual: The text shatters into fragments.
 
-AUDIO: Ten. Million.
+AUDIO: By 2030, the world will be short ten million healthcare workers. Medical students are burning out, drowning in static textbooks, and forgetting critical visual patterns within weeks. We can't build medical schools fast enough.
 
-That is the global shortage of healthcare workers we will face by 2030.
+Visual: Quick, rhythmic cuts of traditional studying, flashing to lines of code, then booming into the sleek, dark-mode ENGRAM UI.
 
-Because of that burnout, diagnostic errors now contribute to ten percent of all patient deaths. A radiology student needs thousands of practice cases to become competent. Instead, they get a handful—graded inconsistently, and forgotten within weeks.
+AUDIO: So, I hacked how the human brain learns instead.
 
-We can't build medical schools fast enough. So we have to hack how the human brain learns.
+## [0:20 — THE MECH SUIT] (40 seconds)
 
-[Screen: The text shatters. The sleek, dark-mode ENGRAM UI boots up instantly.]
+Visual: The user clicks "Start Session." A Chest X-Ray loads instantly.
 
-[0:45 — THE MECH SUIT] (90 seconds)
-[Screen: ENGRAM running live. The user clicks "Start Session." A Chest X-Ray appears.]
+AUDIO: Meet ENGRAM. It is not a chatbot. It is a pedagogical exoskeleton powered by five state-of-the-art Google foundation models, running entirely offline, on a single GPU.
 
-AUDIO: This is ENGRAM. Five state-of-the-art Google foundation models, wired directly into one human memory algorithm. Running entirely offline. On a single GPU.
+Visual: User clicks the microphone, speaks, and text perfectly appears.
 
-ENGRAM doesn't just show you random X-Rays. The FSRS-6 algorithm tracks your exact cognitive decay. It knows this student hasn't seen Atelectasis in six days. It knows their retention just hit 68 percent. It intercepts the exact moment of forgetting.
+AUDIO: Real doctors dictate. So ENGRAM uses Google's MedASR to catch audio with 58 percent fewer errors than Whisper.
 
-[Screen: User clicks the microphone. Dictates via MedASR. Text appears instantly.]
+Visual: The user hits "Submit." MedGemma instantly draws high-fidelity bounding boxes on the X-Ray, accompanied by structured JSON teaching data.
 
-AUDIO: Real doctors don't type. They dictate. Google's MedASR catches the audio with 58 percent fewer errors than Whisper.
+AUDIO: MedGemma 1.5 serves as the core reasoning engine—analyzing the image, grading the response, and drawing the exact bounding boxes of what the student missed. But it doesn't stop there.
 
-[Screen: User hits "Submit." MedGemma instantly draws high-fidelity bounding boxes on the X-Ray, accompanied by JSON teaching data.]
+## [1:00 — THE COGNITIVE INTERCEPTION] (45 seconds)
 
-AUDIO: MedGemma 1.5 analyzes the image, grades the response, and draws the exact bounding boxes of what you missed.
+Visual: A visualization of the FSRS-6 algorithm power-law curve.
 
-But diagnostic errors aren't just a lack of knowledge. They are cognitive biases. So we built six clinical training modes to break them.
+AUDIO: ENGRAM is wired directly into FSRS-6, a 21-parameter algorithm that mathematically models cognitive decay. It knows you haven't seen an Atelectasis in six days. It knows your retention just dropped to 68 percent. It intervenes at the exact moment you are about to forget.
 
-[Screen: Rapid, rhythmic cuts. 5 seconds per mode. High energy.]
+Visual: Rapid, rhythmic UI cuts. 3 seconds per mode. High energy.
 
-AUDIO: Satisfaction of Search: Did you find the second tumor, or did you stop after the first? ENGRAM tracks your search completeness.
-Confidence Calibration: You were 100 percent confident, but completely wrong. Overconfidence kills. ENGRAM penalizes your interval.
-Contrastive Pairs: Consolidation and Atelectasis look identical. ENGRAM forces you to spot the microscopic differences side-by-side.
-Listen Then Look: [Audio: play 2 seconds of synthetic crackle breath sounds] HeAR plays bioacoustic lung sounds. Hear the patient, predict the X-ray, then see the truth.
+AUDIO: We built six training modes to break human cognitive bias:
 
-[Screen: Scroll down to the Diagnostic Landscape—a glowing heatmap of blind spots.]
+Satisfaction of Search: Found one tumor but missed the second? ENGRAM mathematically penalizes your review interval.
 
-AUDIO: Every click updates your personal Forgetting Landscape. No hiding. You see exactly where you are strong, and exactly where you are dangerously weak.
+Gestalt Mode: A three-second flash tests your intuitive recognition before your analytical brain kicks in.
 
-[2:15 — THE PARADIGM SHIFT] (25 seconds)
-[Screen: Architecture diagram showing the 'Biological-Digital Bridge'. FSRS signals flowing directly into QLoRA weights.]
+Contrastive Pairs: MedSigLIP retrieves visually identical but diagnostically different cases and forces you to spot the microscopic differences side-by-side.
 
-AUDIO: But here is the breakthrough.
+Listen Then Look: HeAR plays synthetic bioacoustic lung sounds. Hear the crackles, predict the X-ray, then see the truth.
 
-As students review cases, FSRS-6 mathematically scores how hard each concept is. We take those human difficulty signals, and we use them as fine-tuning weights for MedGemma. Every other curriculum system uses model-internal math. ENGRAM is the first system to use human memory parameters to rewrite a Vision-Language Model's neural weights.
+## [1:45 — THE PARADIGM SHIFT / THE NOVEL TASK] (45 seconds)
 
-The cases humans struggle with the most get the highest training priority. The AI literally evolves to teach you better.
+Visual: The UI zooms out to reveal the 'Biological-Digital Bridge' architecture diagram. FSRS signals (D=8.2) flowing directly into QLoRA weights.
 
-[2:40 — THE MIC DROP] (20 seconds)
-[Screen: The UI fades out. White text appears on black.]
+AUDIO: But here is the invention. Here is why ENGRAM is entirely unique.
+
+Visual: Zoom in on the LoRA fine-tuning code snippet as it runs.
+
+AUDIO: As students review cases, the system tracks their failure rates. We take those human difficulty scores and use them as literal sampling weights for MedGemma's LoRA fine-tuning.
+
+Visual: A glowing heatmap of blind spots appears, shifting and adapting.
+
+AUDIO: Every other curriculum system uses model-internal math. ENGRAM is the first system to use human cognitive failure rates to rewrite a Vision-Language Model's neural weights. The system mathematically forces the AI to become a better teacher in the exact areas humans are worst at remembering. The ground truth remains clinically verified; the AI just learns to teach it louder.
+
+## [2:30 — THE MIC DROP] (30 seconds)
+
+Visual: The UI fades out. Crisp white text appears on black, one line at a time.
+
 > 2,200 lines of Python.
-> 5 HAI-DEF Models.
-> 0 Cloud Dependencies. 100% Edge-Deployable.
+> 5 Google Foundation Models.
+> 13.4GB VRAM Footprint.
+> 100% Offline Edge Deployment.
 
-AUDIO: Five models. Twenty-one parameters. Zero cloud dependencies. No patient data ever leaves the device.
+AUDIO: Five models working in perfect unison. A total VRAM footprint of just 13.4 gigabytes. Zero cloud dependencies. No patient data ever leaves the clinic.
 
-[Screen: Sam speaking directly to camera, dead serious.]
+Visual: Sam speaking directly to the camera, dead serious, unblinking.
 
-AUDIO: I originally built this math to fix my own memory.
-
-Now, we're going to use it to make sure the next generation of doctors never forgets a shadow on an X-Ray again.
+AUDIO: I originally wrote 62,000 lines of memory code to fix my own failing recall. Today, that algorithm is fine-tuning MedGemma. Tomorrow, we use it to make sure the next generation of doctors never misses a shadow on an X-Ray again.
