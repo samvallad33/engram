@@ -213,17 +213,25 @@ def run_sim(is_fsrs):
     scores = []
     stability = 1.0
     for i in range(20):
-        interval = (stability * 2.5) if is_fsrs else np.random.uniform(0.5, 14.0)
+        if is_fsrs:
+            interval = fsrs_next_interval(stability, target=0.9)
+        else:
+            interval = np.random.choice([1, 3, 7, 14])  # Fixed schedule (no adaptation)
         r = retrievability(stability, interval)
-        score = clamp(r + 0.05 * (i / 20) + np.random.normal(0, 0.08), 0, 1)
+        score = clamp(r + np.random.normal(0, 0.05), 0, 1)
         scores.append(score)
-        stability = (stability * (1.0 + 0.15 * score)) if score >= 0.6 else (stability * 0.5)
+        if score >= 0.6:
+            stability = stability * (1.0 + 0.1 * score)
+        else:
+            stability = max(0.5, stability * 0.4)
     return scores
 
-fsrs_avg = np.mean([np.mean(run_sim(True)[-5:]) for _ in range(50)])
-rand_avg = np.mean([np.mean(run_sim(False)[-5:]) for _ in range(50)])
-print(f"  Final Retention (FSRS-6): {fsrs_avg:.1%} | Random: {rand_avg:.1%}")
-print(f"  Improvement: {((fsrs_avg - rand_avg) / rand_avg) * 100:.1f}%\n")
+fsrs_scores = [np.mean(run_sim(True)[-5:]) for _ in range(50)]
+rand_scores = [np.mean(run_sim(False)[-5:]) for _ in range(50)]
+fsrs_avg, rand_avg = np.mean(fsrs_scores), np.mean(rand_scores)
+print(f"  Final Retention (50 students, last 5 reviews):")
+print(f"  FSRS-6 Adaptive: {fsrs_avg:.1%} | Fixed Random: {rand_avg:.1%}")
+print(f"  Improvement: +{((fsrs_avg - rand_avg) / rand_avg) * 100:.1f}%\n")
 
 print("""
   +------------------------------------------------------------+
