@@ -24,6 +24,15 @@ print(f"PyTorch: {torch.__version__} | CUDA: {torch.cuda.is_available()}")
 if torch.cuda.is_available():
     print(f"GPU: {torch.cuda.get_device_name(0)} | VRAM: {torch.cuda.get_device_properties(0).total_memory / 1e9:.1f} GB")
 
+# Authenticate with HuggingFace for gated models
+import os
+try:
+    from kaggle_secrets import UserSecretsClient
+    os.environ["HF_TOKEN"] = UserSecretsClient().get_secret("HF_TOKEN")
+    print("HuggingFace token loaded from Kaggle Secrets.")
+except:
+    print("No Kaggle secrets found — using environment HF_TOKEN if available.")
+
 model_status = {}
 
 # %% [markdown]
@@ -96,7 +105,8 @@ for cat, ans in cases:
     resp = medgemma_infer(test_image, prompt)
     
     score = float(re.search(r'"score":\s*([0-9.]+)', resp).group(1)) if '"score"' in resp else 0.5
-    bbox = re.search(r'"bbox":\s*(\[[0-9,\s]+\])', resp).group(1) if '"bbox"' in resp else "[not found]"
+    bbox_match = re.search(r'"bbox":\s*"?(\[[0-9,\s]+\])"?', resp) if '"bbox"' in resp else None
+    bbox = bbox_match.group(1) if bbox_match else "[not found]"
     
     grade = 4 if score >= 0.8 else (3 if score >= 0.5 else (2 if score >= 0.3 else 1))
     s, d = fsrs_init(grade)
